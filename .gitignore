@@ -1,1 +1,9 @@
+venv/
+__pycache__/
+*.pyc
 .env
+openai_config.json
+feedback_log.csv
+.DS_Store
+*.egg-info/
+.pytest_cache/

@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 # Smaller files = fewer tokens per run (critical for rate limits and cost).
+# Keep low for demos (~400). Raise only if you accept higher OpenAI cost.
 MAX_ROWS_PER_FILE = 400
 
 load_dotenv()

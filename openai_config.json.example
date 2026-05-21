@@ -1,0 +1,8 @@
+{
+  "assistant_id": "asst_REPLACE_AFTER_SETUP",
+  "file_ids": {
+    "sales": "file_REPLACE",
+    "hr": "file_REPLACE",
+    "market": "file_REPLACE"
+  }
+}
