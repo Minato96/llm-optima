@@ -76,7 +76,7 @@ The app already **retries** rate limits automatically a few times.
 
 3. Avoid “describe a chart” without “plot” or “draw”.
 
-4. After a chart appears, **Streamlit rerun** may not re-show old images—that is normal; say “charts display on the turn they are generated.”
+4. Charts are saved in session memory— they stay visible when you send the next prompt (if an old session still shows “re-run to regenerate”, refresh the app once after updating `app.py`).
 
 ### If still no image
 

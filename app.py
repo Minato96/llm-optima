@@ -1,10 +1,11 @@
+import base64
 import csv
 import json
-import os
 import re
 import time
 import warnings
 from pathlib import Path
+import os
 
 import streamlit as st
 from dotenv import load_dotenv
@@ -144,30 +145,58 @@ def create_thread_with_files(role: str, prompt: str):
     )
 
 
-def display_image_file(image_file_id: str):
-    image_data = client.files.content(image_file_id).read()
-    st.image(image_data)
+def fetch_image_bytes(image_file_id: str) -> bytes:
+    return client.files.content(image_file_id).read()
+
+
+def render_message(msg: dict):
+    """Render one stored chat message (user text or assistant parts with persisted charts)."""
+    if msg["role"] == "user":
+        st.markdown(msg["content"])
+        return
+
+    if "parts" not in msg:
+        # Older sessions stored a placeholder instead of image bytes.
+        content = msg.get("content", "")
+        if content.startswith("![chart]"):
+            st.caption("Chart from an earlier session — re-ask with “plot” to regenerate.")
+        else:
+            st.markdown(content)
+        return
+
+    for part in msg.get("parts", []):
+        if part["type"] == "image":
+            st.image(base64.b64decode(part["data"]))
+        elif part["type"] == "text":
+            st.markdown(part["content"])
 
 
 def render_assistant_message(message, session_messages: list):
-    """Show text and chart blocks from the latest assistant message."""
-    shown_image = False
-    text_parts = []
+    """Show text and chart blocks; persist image bytes so charts survive the next prompt."""
+    parts = []
 
     for block in message.content:
-        if block.type == "text":
-            text_parts.append(block.text.value)
-        elif block.type == "image_file":
-            display_image_file(block.image_file.file_id)
-            session_messages.append({"role": "assistant", "content": "![chart](generated)"})
-            shown_image = True
+        if block.type == "image_file":
+            image_bytes = fetch_image_bytes(block.image_file.file_id)
+            parts.append(
+                {
+                    "type": "image",
+                    "data": base64.b64encode(image_bytes).decode("ascii"),
+                }
+            )
+        elif block.type == "text":
+            parts.append({"type": "text", "content": block.text.value})
 
-    if text_parts:
-        response_text = "\n\n".join(text_parts)
-        st.markdown(response_text)
-        session_messages.append({"role": "assistant", "content": response_text})
+    if not parts:
+        return
 
-    return shown_image
+    session_messages.append({"role": "assistant", "parts": parts})
+
+    for part in parts:
+        if part["type"] == "image":
+            st.image(base64.b64decode(part["data"]))
+        else:
+            st.markdown(part["content"])
 
 
 assistant_id = get_assistant_id()
@@ -216,10 +245,7 @@ if "thread_id" not in st.session_state:
 
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
-        if msg["content"].startswith("![chart]"):
-            st.caption("Chart was generated in the previous turn (re-run question to regenerate).")
-        else:
-            st.markdown(msg["content"])
+        render_message(msg)
 
 if prompt := st.chat_input("e.g. Plot quarterly profit by region as a bar chart"):
     st.session_state.messages.append({"role": "user", "content": prompt})
