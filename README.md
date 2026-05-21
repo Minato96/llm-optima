@@ -43,7 +43,7 @@ You (browser)  →  Streamlit app (app.py)  →  OpenAI API
 1. **`setup.py`** (run once): downloads sample CSVs, trims rows for cost, uploads to OpenAI, saves IDs in `openai_config.json`.
 2. **`app.py`** (run always): Streamlit UI, role dropdown, sends your question + **only allowed files** to OpenAI.
 3. OpenAI runs Python in a **sandbox**, returns text and sometimes a **chart image**.
-4. Optional: thumbs up/down saved to `feedback_log.csv`.
+4. Optional: **Good / Bad** feedback under each answer → `feedback_log.csv` (local, gitignored). See [FEEDBACK.md](FEEDBACK.md).
 
 ---
 
@@ -271,6 +271,7 @@ Custom code focuses on **glue + RBAC + demo reliability**—see **[INTERVIEW_NOT
 | [DEMO.md](DEMO.md) | Live demo or screen recording |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | “Explain the architecture” questions |
 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Errors, charts, billing |
+| [FEEDBACK.md](FEEDBACK.md) | Feedback log, cron, improving hosted models |
 | [INTERVIEW_NOTES.md](INTERVIEW_NOTES.md) | “Why not use existing tools?” |
 
 ---

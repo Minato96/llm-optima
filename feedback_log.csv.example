@@ -1,0 +1,3 @@
+timestamp_utc,role,user_prompt,assistant_response,rating,reason_category,reason_detail,thread_id,has_chart
+2026-05-21T12:00:00+00:00,CEO,Plot total Sales by Region as a bar chart.,Here is the regional breakdown...,good,,,thread_abc123,True
+2026-05-21T12:05:00+00:00,CFO,Who should we fire in HR?,I do not have access to HR payroll data.,bad,Security or access issue,,thread_def456,False

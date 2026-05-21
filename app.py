@@ -1,15 +1,23 @@
 import base64
-import csv
 import json
 import re
 import time
 import warnings
 from pathlib import Path
-import os
 
 import streamlit as st
 from dotenv import load_dotenv
 from openai import OpenAI
+
+from feedback import (
+    BAD_REASONS,
+    FEEDBACK_PATH,
+    assistant_text,
+    count_feedback_rows,
+    ensure_feedback_log,
+    log_feedback,
+    user_prompt_for_turn,
+)
 
 warnings.filterwarnings(
     "ignore",
@@ -182,7 +190,14 @@ def render_message(msg: dict):
             st.markdown(part["content"])
 
 
-def render_assistant_message(message, session_messages: list):
+def render_assistant_message(
+    message,
+    session_messages: list,
+    *,
+    role: str,
+    user_prompt: str,
+    thread_id: str,
+):
     """Show text and chart blocks; persist image bytes so charts survive the next prompt."""
     parts = []
 
@@ -201,13 +216,94 @@ def render_assistant_message(message, session_messages: list):
     if not parts:
         return
 
-    session_messages.append({"role": "assistant", "parts": parts})
+    stored = {
+        "role": "assistant",
+        "parts": parts,
+        "meta": {
+            "role": role,
+            "user_prompt": user_prompt,
+            "thread_id": thread_id,
+            "has_chart": any(p["type"] == "image" for p in parts),
+        },
+        "feedback": None,
+    }
+    session_messages.append(stored)
 
     for part in parts:
         if part["type"] == "image":
             st.image(base64.b64decode(part["data"]))
         else:
             st.markdown(part["content"])
+
+
+def record_feedback(message_index: int, rating: str, reason: str = "", detail: str = ""):
+    msg = st.session_state.messages[message_index]
+    meta = msg.get("meta", {})
+    log_feedback(
+        role=meta.get("role", st.session_state.get("current_role", "")),
+        user_prompt=meta.get("user_prompt") or user_prompt_for_turn(
+            st.session_state.messages, message_index
+        ),
+        assistant_response=assistant_text(msg),
+        rating=rating,
+        reason_category=reason,
+        reason_detail=detail,
+        thread_id=meta.get("thread_id", st.session_state.get("thread_id", "")),
+        has_chart=meta.get("has_chart", False),
+    )
+    msg["feedback"] = {
+        "rating": rating,
+        "reason": reason,
+        "detail": detail,
+    }
+
+
+def render_feedback_ui(message_index: int):
+    msg = st.session_state.messages[message_index]
+    if msg.get("feedback"):
+        fb = msg["feedback"]
+        label = fb["rating"]
+        if fb.get("reason"):
+            label += f" — {fb['reason']}"
+        st.caption(f"Feedback recorded ({label})")
+        return
+
+    st.caption("Was this helpful?")
+    col1, col2 = st.columns(2)
+    if col1.button("Good", key=f"fb_good_{message_index}"):
+        record_feedback(message_index, "good")
+        st.toast(f"Saved to {FEEDBACK_PATH}")
+        st.rerun()
+
+    if col2.button("Bad", key=f"fb_bad_{message_index}"):
+        st.session_state.feedback_bad_idx = message_index
+        st.rerun()
+
+    if st.session_state.get("feedback_bad_idx") == message_index:
+        reason = st.selectbox(
+            "What went wrong?",
+            BAD_REASONS,
+            key=f"fb_reason_{message_index}",
+        )
+        detail = ""
+        if reason == "Other":
+            detail = st.text_input(
+                "Describe the issue",
+                key=f"fb_detail_{message_index}",
+            )
+        if st.button("Submit feedback", key=f"fb_submit_{message_index}"):
+            record_feedback(message_index, "bad", reason, detail)
+            st.session_state.feedback_bad_idx = None
+            st.toast(f"Saved to {FEEDBACK_PATH}")
+            st.rerun()
+
+
+def last_assistant_index_without_feedback() -> int | None:
+    pending = None
+    for idx, msg in enumerate(st.session_state.messages):
+        if msg["role"] == "assistant" and not msg.get("feedback"):
+            pending = idx
+    return pending
 
 
 assistant_id = get_assistant_id()
@@ -245,6 +341,12 @@ st.sidebar.caption(
     f"Auto-hint after {MAX_TURNS_PER_THREAD} turns in one thread."
 )
 
+ensure_feedback_log()
+st.sidebar.markdown("---")
+st.sidebar.markdown("**Feedback log**")
+st.sidebar.code(str(FEEDBACK_PATH.resolve()), language=None)
+st.sidebar.caption(f"{count_feedback_rows()} row(s) saved (gitignored). See FEEDBACK.md.")
+
 if "current_role" not in st.session_state or st.session_state.current_role != role:
     st.session_state.current_role = role
     st.session_state.messages = []
@@ -258,10 +360,16 @@ if "thread_id" not in st.session_state:
     st.session_state.thread_id = None
 if "thread_turns" not in st.session_state:
     st.session_state.thread_turns = 0
+if "feedback_bad_idx" not in st.session_state:
+    st.session_state.feedback_bad_idx = None
 
-for msg in st.session_state.messages:
+feedback_idx = last_assistant_index_without_feedback()
+
+for idx, msg in enumerate(st.session_state.messages):
     with st.chat_message(msg["role"]):
         render_message(msg)
+        if idx == feedback_idx:
+            render_feedback_ui(idx)
 
 if prompt := st.chat_input("e.g. Plot quarterly profit by region as a bar chart"):
     st.session_state.messages.append({"role": "user", "content": prompt})
@@ -296,20 +404,14 @@ if prompt := st.chat_input("e.g. Plot quarterly profit by region as a bar chart"
                 messages = client.beta.threads.messages.list(thread_id=thread_id)
                 latest = messages.data[0]
                 status_text.empty()
-                render_assistant_message(latest, st.session_state.messages)
-
-                st.markdown("---")
-                c1, c2 = st.columns([1, 4])
-                with c1:
-                    if st.button("Good", key=f"up_{time.time()}"):
-                        with open("feedback_log.csv", "a", newline="", encoding="utf-8") as f:
-                            csv.writer(f).writerow([role, prompt, "Good"])
-                        st.toast("Feedback saved.")
-                with c2:
-                    if st.button("Bad", key=f"down_{time.time()}"):
-                        with open("feedback_log.csv", "a", newline="", encoding="utf-8") as f:
-                            csv.writer(f).writerow([role, prompt, "Bad"])
-                        st.toast("Feedback saved.")
+                render_assistant_message(
+                    latest,
+                    st.session_state.messages,
+                    role=role,
+                    user_prompt=prompt,
+                    thread_id=thread_id,
+                )
+                render_feedback_ui(len(st.session_state.messages) - 1)
             elif run.status == "failed":
                 error_msg = run.last_error.message if run.last_error else "Unknown error"
                 status_text.error(f"Run failed: {error_msg}")
