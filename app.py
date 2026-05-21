@@ -345,7 +345,7 @@ ensure_feedback_log()
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Feedback log**")
 st.sidebar.code(str(FEEDBACK_PATH.resolve()), language=None)
-st.sidebar.caption(f"{count_feedback_rows()} row(s) saved (gitignored). See FEEDBACK.md.")
+st.sidebar.caption(f"{count_feedback_rows()} row(s) in feedback_log.csv (gitignored).")
 
 if "current_role" not in st.session_state or st.session_state.current_role != role:
     st.session_state.current_role = role
