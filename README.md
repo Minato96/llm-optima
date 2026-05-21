@@ -147,7 +147,8 @@ streamlit run app.py
 
 - Pick **CEO** or **CFO** in the sidebar.
 - Ask a question in the chat box.
-- Use **New chat (saves credits)** between unrelated topics.
+- **Follow-up questions** (e.g. “explain that drop in the plot”) stay in the **same OpenAI thread** so context is kept.
+- Use **New chat** when you switch to a **different topic** (saves credits).
 - For charts, say **bar chart** or **line plot** explicitly.
 
 See **[DEMO.md](DEMO.md)** for a rehearsed 5-minute interview walkthrough.

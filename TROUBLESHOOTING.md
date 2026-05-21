@@ -33,6 +33,29 @@ The app already **retries** rate limits automatically a few times.
 
 ---
 
+## Follow-up questions ignore earlier messages ("which file?", "see the plot")
+
+### Cause
+
+This is **not** a weak model. The UI showed old messages, but an older version sent **each question on a brand-new OpenAI thread** with no history. The API only saw your latest sentence.
+
+### Fix (current app)
+
+- First question in a session: new thread + file attachments (RBAC).
+- Follow-ups: **same thread** until you click **New chat**.
+- Charts stay in the Streamlit UI; the model also sees prior text in the thread.
+
+### Cost tradeoff
+
+| Pattern | Context | Cost |
+|---------|---------|------|
+| New chat per topic | None across topics | Lowest |
+| Same thread for follow-ups | Yes | Grows with each turn |
+
+After ~8 turns, start a **New chat** for a new subject.
+
+---
+
 ## Burning through credits quickly
 
 ### Symptoms

@@ -43,10 +43,13 @@ Rules:
    - Do not only describe the chart in text—always render it.
 4. Use small samples (e.g. df.head(200)) when exploring; only process full files when needed.
 5. CFO may not have HR data—if a question needs HR and you lack that file, say access is denied.
+6. Use the full conversation history. If the user refers to "the plot", "that drop", or a prior answer, continue that analysis—do not ask which files to use unless the topic truly changed.
 """
 
 MAX_RUN_SECONDS = 120
 POLL_INTERVAL_SEC = 2
+# Follow-ups in the same thread see prior Q&A. Click "New chat" between unrelated topics.
+MAX_TURNS_PER_THREAD = 8
 
 
 def load_config():
@@ -145,6 +148,14 @@ def create_thread_with_files(role: str, prompt: str):
     )
 
 
+def add_user_message_to_thread(thread_id: str, prompt: str):
+    return client.beta.threads.messages.create(
+        thread_id=thread_id,
+        role="user",
+        content=prompt,
+    )
+
+
 def fetch_image_bytes(image_file_id: str) -> bytes:
     return client.files.content(image_file_id).read()
 
@@ -222,26 +233,31 @@ st.markdown(
 role = st.sidebar.selectbox("Log in as:", ["CEO", "CFO"])
 st.sidebar.markdown(f"**Authorized files:** {len(ROLE_ACCESS[role])}")
 
-if st.sidebar.button("New chat (saves credits)"):
+if st.sidebar.button("New chat"):
     st.session_state.messages = []
     st.session_state.thread_id = None
+    st.session_state.thread_turns = 0
     st.rerun()
 
 st.sidebar.caption(
-    "Cost tips: one topic per chat, use New chat between unrelated questions, "
-    "and keep prompts specific. Large thread history causes rate limits."
+    "Follow-up questions keep context in one OpenAI thread. "
+    "Click **New chat** when you switch topics (saves credits). "
+    f"Auto-hint after {MAX_TURNS_PER_THREAD} turns in one thread."
 )
 
 if "current_role" not in st.session_state or st.session_state.current_role != role:
     st.session_state.current_role = role
     st.session_state.messages = []
     st.session_state.thread_id = None
+    st.session_state.thread_turns = 0
     st.toast(f"Switched to {role}. Chat cleared.")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "thread_id" not in st.session_state:
     st.session_state.thread_id = None
+if "thread_turns" not in st.session_state:
+    st.session_state.thread_turns = 0
 
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
@@ -255,16 +271,29 @@ if prompt := st.chat_input("e.g. Plot quarterly profit by region as a bar chart"
     with st.chat_message("assistant"):
         status_text = st.empty()
         try:
-            # Fresh thread per question = far fewer tokens than one long thread.
-            status_text.text("Starting secure session with your authorized files…")
-            thread = create_thread_with_files(role, prompt)
-            st.session_state.thread_id = thread.id
+            thread_id = st.session_state.thread_id
 
-            run = create_run_with_retry(thread.id, assistant_id, status_text)
-            run = wait_for_run(thread.id, run.id, status_text)
+            if thread_id is None:
+                status_text.text("Starting secure session with your authorized files…")
+                thread = create_thread_with_files(role, prompt)
+                thread_id = thread.id
+                st.session_state.thread_id = thread_id
+                st.session_state.thread_turns = 1
+            else:
+                turns = st.session_state.get("thread_turns", 0)
+                if turns >= MAX_TURNS_PER_THREAD:
+                    st.sidebar.warning(
+                        f"{MAX_TURNS_PER_THREAD} turns in this thread — use **New chat** soon to limit cost."
+                    )
+                status_text.text("Continuing conversation (prior messages included)…")
+                add_user_message_to_thread(thread_id, prompt)
+                st.session_state.thread_turns = turns + 1
+
+            run = create_run_with_retry(thread_id, assistant_id, status_text)
+            run = wait_for_run(thread_id, run.id, status_text)
 
             if run.status == "completed":
-                messages = client.beta.threads.messages.list(thread_id=thread.id)
+                messages = client.beta.threads.messages.list(thread_id=thread_id)
                 latest = messages.data[0]
                 status_text.empty()
                 render_assistant_message(latest, st.session_state.messages)
