@@ -2,7 +2,7 @@
 
 A small **enterprise chatbot** that lets executives ask questions in plain English about company CSV files. The AI writes and runs **real Python (pandas + matplotlib)** in OpenAI’s cloud sandbox—not guesses—and only sees files allowed for that role.
 
-Built as a **24-hour interview prototype**: thin custom code + heavy use of managed AI (low-code friendly).
+Built as a **rapid proof of concept (PoC)**: thin custom code + heavy use of managed AI services, suitable for executive demos and architecture review.
 
 ---
 
@@ -70,10 +70,10 @@ You (browser)  →  Streamlit app (app.py)  →  OpenAI API
 | `real_*.csv` | Local copies of datasets |
 | `requirements.txt` | Python packages |
 | `.env` | Your OpenAI API key (never share or commit) |
-| `DEMO.md` | Step-by-step demo script for interviews |
+| `DEMO.md` | Step-by-step stakeholder demo script |
 | `ARCHITECTURE.md` | Deeper technical flow |
 | `TROUBLESHOOTING.md` | Rate limits, cost, missing charts |
-| `INTERVIEW_NOTES.md` | How to present this to a low-code AI interviewer |
+| `STAKEHOLDER_GUIDE.md` | Presentation talking points and platform comparison |
 
 ---
 
@@ -151,7 +151,7 @@ streamlit run app.py
 - Use **New chat** when you switch to a **different topic** (saves credits).
 - For charts, say **bar chart** or **line plot** explicitly.
 
-See **[DEMO.md](DEMO.md)** for a rehearsed 5-minute interview walkthrough.
+See **[DEMO.md](DEMO.md)** for a rehearsed 5-minute stakeholder walkthrough.
 
 ---
 
@@ -241,7 +241,7 @@ Lower = cheaper and faster. Higher = more “real” but easier to hit rate limi
 | Real login / SSO | Not in scope (dropdown only) |
 | Production BI | Would be Power BI / Fabric / Tableau in a real company |
 
-Custom code focuses on **glue + RBAC + demo reliability**—see **[INTERVIEW_NOTES.md](INTERVIEW_NOTES.md)**.
+Custom code focuses on **glue + RBAC + demo reliability**—see **[STAKEHOLDER_GUIDE.md](STAKEHOLDER_GUIDE.md)**.
 
 ---
 
@@ -254,12 +254,12 @@ Custom code focuses on **glue + RBAC + demo reliability**—see **[INTERVIEW_NOT
 
 ---
 
-## Limitations (honest list for reviewers)
+## Limitations (honest list for stakeholders)
 
 1. Role selector is not real authentication.
 2. Assistants API is deprecated; production should migrate to Responses / Agents SDK.
 3. Charts only appear when the model uses matplotlib and returns an image block.
-4. API costs are real—use small data and few demo prompts in interviews.
+4. API costs are real—use small data and a scripted demo for presentations.
 5. Feedback is a local CSV, not a database.
 
 ---
@@ -272,14 +272,14 @@ Custom code focuses on **glue + RBAC + demo reliability**—see **[INTERVIEW_NOT
 | [ARCHITECTURE.md](ARCHITECTURE.md) | “Explain the architecture” questions |
 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Errors, charts, billing |
 | [FEEDBACK.md](FEEDBACK.md) | Feedback log, cron, improving hosted models |
-| [INTERVIEW_NOTES.md](INTERVIEW_NOTES.md) | “Why not use existing tools?” |
+| [STAKEHOLDER_GUIDE.md](STAKEHOLDER_GUIDE.md) | “Why not use existing tools?” and presentation narrative |
 
 ---
 
-## License / submission
+## Project status
 
-Personal interview project. Add your name and submission date when sending to the interviewer.
+Internal PoC / demo artifact. Add owner and last-reviewed date when sharing outside the team.
 
-**Suggested one-liner for your cover note:**
+**Suggested summary for stakeholders:**
 
 > *Enterprise NL analytics PoC: Streamlit + OpenAI Code Interpreter with role-based file attachments (CEO vs CFO). Custom code handles governance and integration; the platform runs Python and charts.*

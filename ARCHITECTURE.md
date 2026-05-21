@@ -1,6 +1,6 @@
 # Architecture
 
-This document explains **how data and requests flow** through the project. Written for beginners and technical interviewers.
+This document explains **how data and requests flow** through the project. Written for engineers, architects, and technical stakeholders.
 
 ---
 
@@ -195,7 +195,7 @@ Useful for a PoC “human review” story; not a production observability pipeli
 
 ## Why Assistants API (and caveats)
 
-**Pros for a 24h build:**
+**Pros for a rapid PoC:**
 
 - File attach + Python sandbox in one API  
 - Little infrastructure  
@@ -206,7 +206,7 @@ Useful for a PoC “human review” story; not a production observability pipeli
 - Cost and token use are hard to predict  
 - Less control than running pandas locally  
 
-See **INTERVIEW_NOTES.md** for when to replace this with low-code + data platform tools.
+See **STAKEHOLDER_GUIDE.md** for when to replace this with low-code + data platform tools.
 
 ---
 

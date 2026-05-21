@@ -8,7 +8,7 @@ How feedback works in this PoC, where it is stored, and how you would use it in 
 
 | For… | Verdict |
 |------|---------|
-| **24h interview demo** | Yes, after the fix: proves you thought about human review |
+| **PoC / stakeholder demo** | Yes, after the fix: proves human-in-the-loop review was considered |
 | **Production** | No — needs DB, auth, PII rules, and a defined ML/ops pipeline |
 
 ---
@@ -158,8 +158,8 @@ OpenAI may already retain thread data per their policy—your log should stay **
 
 ---
 
-## Interview one-liner
+## Stakeholder one-liner
 
-> “Feedback is an append-only audit log for human review and eval datasets—not automatic retraining. With a hosted model we improve instructions, tools, and governance; fine-tuning or RAG is a later step once we have labeled volume and legal sign-off.”
+> “Feedback is an append-only audit log for human review and evaluation datasets—not automatic retraining. With a hosted model we improve instructions, tools, and governance; fine-tuning or RAG is a later step once we have labeled volume and legal sign-off.”
 
-That is the credible answer for a low-code + AI engineer role.
+That framing works for product, compliance, and engineering audiences alike.

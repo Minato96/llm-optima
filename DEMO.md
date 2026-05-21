@@ -1,6 +1,6 @@
 # Demo script (5–7 minutes)
 
-Use this when presenting live or recording a Loom. **Rehearse once** so you are not fighting the API during the interview.
+Use this for **live stakeholder presentations** or a recorded walkthrough. **Rehearse once** so you are not fighting the API during the session.
 
 ---
 
@@ -19,7 +19,7 @@ Use this when presenting live or recording a Loom. **Rehearse once** so you are 
 1. Natural language → **Python execution** on real CSVs  
 2. **Charts** when asked clearly  
 3. **RBAC**: CFO cannot use HR data  
-4. You understand **cost control** (new chat, small files)
+4. **Cost control** is designed in (new chat, trimmed datasets)
 
 ---
 
@@ -27,7 +27,7 @@ Use this when presenting live or recording a Loom. **Rehearse once** so you are 
 
 ### 0. Intro (30 seconds, say out loud)
 
-> “This is a financial Q&A agent. Executives ask questions in English; OpenAI runs pandas in a sandbox. I implemented role-based access by attaching only the CSVs each role is allowed to see. The UI is Streamlit—about 200 lines—most of the intelligence is the managed OpenAI stack.”
+> “This is a financial Q&A agent for executives. Questions are asked in plain English; OpenAI runs pandas in a secure sandbox. Access control is enforced by attaching only the CSVs each role is allowed to see. The UI is a thin Streamlit layer; analytics run on the managed OpenAI stack.”
 
 ---
 
@@ -107,7 +107,7 @@ Shows “consulting” style questions, not only charts.
 
 ### 6. Close (30 seconds)
 
-> “For production I’d plug in Entra ID, store files in Fabric or SharePoint with row-level security, and orchestrate with Power Automate or similar. This PoC proves the workflow in a day: governed file access, Python analytics, and natural language UX.”
+> “Production would use Entra ID, data in Fabric or SharePoint with row-level security, and orchestration via Power Automate or equivalent. This PoC validates governed file access, Python-backed analytics, and natural-language UX.”
 
 ---
 

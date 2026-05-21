@@ -120,7 +120,7 @@ pip install -r requirements.txt
 
 ### Download URL fails
 
-Setup falls back to **synthetic small CSVs**. Demo still works; mention “offline fallback data” in the interview.
+Setup falls back to **synthetic small CSVs**. Demo still works; note “offline fallback data” when presenting to stakeholders.
 
 ### `AuthenticationError` / 401
 
@@ -205,7 +205,7 @@ streamlit run app.py --server.port 8502
 
 ## Deprecation warning (Assistants API)
 
-You may see a deprecation warning in the terminal. Suppressed in `app.py` for cleaner demos. For a long-term product, plan migration to OpenAI’s **Responses API** / Agents SDK. Fine for a 24h interview PoC.
+You may see a deprecation warning in the terminal. Suppressed in `app.py` for cleaner demos. For a long-term product, plan migration to OpenAI’s **Responses API** / Agents SDK. Acceptable for a short-lived PoC.
 
 ---
 
